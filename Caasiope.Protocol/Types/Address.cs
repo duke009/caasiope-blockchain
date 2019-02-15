@@ -11,6 +11,7 @@ namespace Caasiope.Protocol.Types
         MultiSignatureECDSA = 0x2,
         HashLock = 0x3,
         TimeLock = 0x4,
+        VendingMachine = 0x5,
     }
 
     [DebuggerDisplay("{Encoded}")]
@@ -56,6 +57,31 @@ namespace Caasiope.Protocol.Types
             buffer[0] = (byte) Type;
             Array.Copy(hash, 0, buffer, 1, length);
             return buffer;
+        }
+
+        public static bool Verify(string encoded)
+        {
+            if (string.IsNullOrEmpty(encoded.Trim()))
+                return false;
+            if (encoded.Length != ENCODED_SIZE)
+                return false;
+
+            try
+            {
+                var hash = Address32Format.Decode(encoded, out var type);
+
+                if (hash == null || hash.Length != RAW_SIZE - 1)
+                    return false;
+
+                if (!Enum.IsDefined(typeof(AddressType), type))
+                    return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public static bool operator == (Address a, Address b)
